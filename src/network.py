@@ -1,6 +1,7 @@
 from cluster import Cluster
 from server import Server
 from torchvision.datasets import MNIST
+from my_library import get_split_dataset
 class Network():
     
     def __init__(self, config):
@@ -8,12 +9,9 @@ class Network():
         self.mbs = Server(self.config)
 
 
-        # Import dataset and divide into partitions
-        if self.config['dataset_name']=='MNIST' and self.config['dataset_distribution']=='IID':
-            pass
-        else:
-            raise NotImplementedError
-
+        # Import dataset and divide training data into partitions
+        training_data, test_data = get_split_dataset(self.config)
+        
         # Create clusters
         if not self.config['n_clusters']:
             return ValueError("Wrong number of clusters found in configuration.")

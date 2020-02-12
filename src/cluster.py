@@ -2,7 +2,7 @@ from client import Client
 
 class Cluster():
 
-    def __init__(self, config, population):
+    def __init__(self, config, n_clients):
         self.config = config
         self.sbs = Server(config)
         
