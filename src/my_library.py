@@ -34,7 +34,7 @@ def get_split_dataset(config):
     trainset, testset = dl.get_dataset(config)
     sample_inds = dl.get_indices(trainset, config)
     testloader = torch.utils.data.DataLoader(testset, batch_size=config["client_batch_size"], shuffle=False, num_workers=2)
-
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=config["client_batch_size"], shuffle=False, num_workers=2)
     train_partitions = []
 
     # ##### DEBUG
@@ -68,7 +68,7 @@ def get_split_dataset(config):
     
     
 
-    return train_partitions, testloader    
+    return trainloader, train_partitions, testloader    
 
 #########################################################
 #########################################################

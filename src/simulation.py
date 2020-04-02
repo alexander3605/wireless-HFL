@@ -18,18 +18,20 @@ class Simulation():
         if self.config['stop_condition'] == 'rounds':
             for _ in range(self.config['stop_value']):
                 self.round_count += 1
-                if self.config["stdout_verbosity"] > 0:
+                if self.config["stdout_verbosity"] >= 1:
                     print(f"----\tRound {self.round_count} of {self.config['stop_value']}\t----")
                 self.network.learn()
-                self.test_accuracy.append(self.network.evaluate())
-                print(f"%%%% TEST ACCURACY: {self.test_accuracy[-1]}")
-                # self.log()
+                if self.round_count % self.config["server_global_rate"] == 0:
+                    self.test_accuracy.append(self.network.evaluate())
+                    print(f"%%%% TEST ACCURACY:\t{self.test_accuracy[-1]}")
+                # self.log() ### TODO
         else:
             raise NotImplementedError
-        
-        plt.figure()
-        plt.plot(self.test_accuracy)
-        plt.show()
+        print()
+        print(self.test_accuracy)
+#         plt.figure()
+#         plt.plot(self.test_accuracy)
+#         plt.show()
 
 
 

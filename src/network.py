@@ -11,8 +11,8 @@ class Network():
 
         self.round_count = 0
         # Import dataset and divide training data into partitions
-        training_partitions, test_set = get_split_dataset(self.config)
-        
+        train_set, training_partitions, test_set = get_split_dataset(self.config)
+        self.train_set = train_set
         self.test_set = test_set
 
         # Create clusters
@@ -38,7 +38,7 @@ class Network():
         self.round_count += 1
 
         # LEARN IN EACH CLUSTER
-        for i in tqdm(range(len(self.clusters))):
+        for i in range(len(self.clusters)):
             self.clusters[i].learn()
 
         # MBS LEARNS FROM SBS
@@ -47,10 +47,17 @@ class Network():
                 print(f"- MBS learning ...")
             self.mbs.set_average_model(self.clusters) # generate new global model
             self.mbs.download_model(self.clusters)    # download new global model to clusters
-
+        
+            if self.config["stdout_verbosity"] >= 1:
+                print(f"%%%% TRAIN ACCURACY:\t{round(self.evaluate_train(),4)}")
 
 
     def evaluate(self):
         if self.config["debug"]:
-            print("- Evaluating global model ...")
+            print("- Evaluating global model on TEST set ...")
         return evaluate_accuracy(self.mbs.model, self.test_set, self.config["device"])
+    
+    def evaluate_train(self):
+        if self.config["debug"]:
+            print("- Evaluating global model on TRAIN set ...")
+        return evaluate_accuracy(self.mbs.model, self.train_set, self.config["device"])
