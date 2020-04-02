@@ -3,6 +3,8 @@ sys.path.insert(1, os.path.join(os.getcwd(), "src"))
 from os import listdir
 from os.path import isfile, join
 from simulator import Simulator
+import warnings
+warnings.filterwarnings('ignore')
 
 
 CONFIG_FILES_DIR = join(os.getcwd(), "config_files")
