@@ -3,12 +3,17 @@ import torch
 import matplotlib.pyplot as plt
 class Simulation():
 
-
-    def configure(self, config):
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        config["device"]=device
+    
+    def __init__(self, id, config):
+        self.id = id
         self.config = config
-        self.log_file = config['log_file']
+
+
+    def configure(self):
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.config["device"]=device
+        
+        self.log_file = self.config['log_file']
         self.network = Network(self.config)
         self.round_count = None
         self.test_accuracy = []

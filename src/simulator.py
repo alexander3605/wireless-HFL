@@ -11,11 +11,10 @@ class Simulator():
             return ValueError("No config_files found in folder. Program is going to close.")
         ## Create simulations
         print(f"====\tConfiguring {len(config_files)} simulations ...\t====")
-        for config_file in config_files:
+        for i, config_file in enumerate(config_files):
             with open(config_file, 'r') as cfg:
                 config = json.load(cfg)
-            sim = Simulation()
-            sim.configure(config)
+            sim = Simulation(id=i, config=config)
             self.simulations.append(sim)
 
 
@@ -26,6 +25,7 @@ class Simulator():
         for sim in self.simulations:
             sim_count += 1
             print(f"====\tExecuting simulation {sim_count} of {len(self.simulations)} ...\t====")
+            sim.configure()
             sim.start()
             print(f"====\tSimulation {sim_count} of {len(self.simulations)} finished.\t====")
         
