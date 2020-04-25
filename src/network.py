@@ -58,8 +58,8 @@ class Network():
             self.mbs.set_average_model(self.clusters) # generate new global model
             self.mbs.download_model(self.clusters)    # download new global model to clusters
         
-            if self.config["stdout_verbosity"] >= 1:
-                print(f"%%%% TRAIN ACCURACY:\t{round(self.evaluate_train(),4)}")
+            # if self.config["stdout_verbosity"] >= 1:
+            #     print(f"%%%% TRAIN ACCURACY:\t{round(self.evaluate_train(),4)}")
 
 
     def evaluate(self):
