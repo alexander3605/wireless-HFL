@@ -1,6 +1,5 @@
 .vscode
 *.pyc
 data/
-*test*
 *ipynb_checkpoints*
 

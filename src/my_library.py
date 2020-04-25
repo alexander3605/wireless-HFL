@@ -9,6 +9,10 @@ from nn_classes import *
 import data_loader as dl
 from pprint import pprint
 from tqdm import tqdm
+import json
+import copy
+from functools import reduce
+from math import sqrt
 
 #########################################################
 #########################################################
@@ -100,6 +104,76 @@ def evaluate_accuracy(model, testloader, device):
             correct += (predicted == labels).sum().item()
     return correct / total
 
+
+
+#########################################################
+#########################################################
+# Read log file
+def read_log(filename): 
+    if os.path.isfile(filename):
+        with open(filename, "r+") as JSONfile:
+            data = json.load(JSONfile)
+        return data
+    else:
+        raise ValueError
+
+
+#########################################################
+#########################################################
+# Write data to log file.
+# If called with mode='a', it is
+# equivalent to calling update_log.
+def write_log(filename, data, mode="w"):
+    if mode == "w":
+        if os.path.exists(filename):
+            os.system(f"rm {filename}")
+        update = json.dumps(data, indent=2)
+        with open(filename, mode) as JSONfile:
+            JSONfile.write(update)
+    elif mode == "a":
+        update_log(filename, data)
+
+#########################################################
+#########################################################
+# Updates log file with new data.
+# If the log file does not exist,
+# the data is written to a new one.
+def update_log(filename, data):
+    try:
+        log_data = read_log(filename)
+    except ValueError:
+        write_log(filename, data)
+        return
+    if type(log_data) is not list:
+        current_data = copy.deepcopy(log_data)
+        log_data = []
+        log_data.append(current_data)
+    log_data.append(data)
+    writable_log = json.dumps(log_data, indent=2)
+    with open(filename, "w") as JSONfile:
+        JSONfile.write(writable_log)
+
+
+#########################################################
+#########################################################
+# Return all factors of input number (as a set)
+def factors(n):
+        step = 2 if n%2 else 1
+        return set(reduce(list.__add__,
+                    ([i, n//i] for i in range(1, int(sqrt(n))+1, step) if n % i == 0)))
+
+
+#########################################################
+#########################################################
+# Return tuple of 2-D arrangement of clusters
+def get_clusters_grid_shape(n_clusters):
+    factors_l = list(factors(n_clusters))
+    factors_l.sort()
+    n_factors = len(factors_l)
+    if n_factors % 2: # odd factors --> square shaped
+        return (factors_l[int((n_factors-1)/2)], factors_l[int((n_factors-1)/2)])
+    else: # even factors --> rectangle shaped
+        return (factors_l[int(n_factors/2 - 1)], factors_l[int(n_factors/2)])
 
 #########################################################
 #########################################################
