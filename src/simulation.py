@@ -14,8 +14,7 @@ class Simulation():
 
 
     def configure(self):
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.config["device"]=device
+#         self.config["device"]=device
         if os.path.exists(self.log_file):
             os.system(f"rm {self.log_file}")
         self.network = Network(self.config)
