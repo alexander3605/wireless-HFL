@@ -22,6 +22,7 @@ def parallelRun(function, args_list, max_threads, wait_time=1,
             fleft = len(args_list) - fdone
             print("Running tests - Left {} - Processing {} - Done {}         {}      ".format(fleft, fprocessing, fdone, timeEst.progress(fdone)), end="\r")
         # when a thread slot is free
+        t=None
         if fool_proof:
             t = threading.Thread(target = foolProofRun, 
                         args = (function, arguments, wait_time_retry), 
@@ -34,13 +35,13 @@ def parallelRun(function, args_list, max_threads, wait_time=1,
         t.start()
         t_list.append(t)
         time.sleep(wait_time)
-
+    print(t_list)
     ### WAIT FOR ALL THE SIMULATIONS TO FINISH
     while threading.activeCount() > 1:
         time.sleep(0.5)
         fprocessing = threading.active_count() - 1
         fdone = len(args_list) - fprocessing
-        print(f"Waiting for {fprocessing} threads out of {len(arg_list)} to terminate...  [{timeEst.progress(fdone)}]       ", end="\r")
+        print(f"Waiting for {fprocessing} threads out of {len(args_list)} to terminate...  [{timeEst.progress(fdone)}]       ", end="\r")
 
     ### WAIT FOR ALL THE THREADS TO FINISH
     for t in t_list:
