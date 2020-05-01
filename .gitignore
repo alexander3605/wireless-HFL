@@ -2,4 +2,4 @@
 *.pyc
 data/
 *ipynb_checkpoints*
-
+log_files/
