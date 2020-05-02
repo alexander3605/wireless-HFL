@@ -37,8 +37,8 @@ def save_config_to_file(config, destination, indent=1):
 def get_split_dataset(config):
     trainset, testset = dl.get_dataset(config)
     sample_inds = dl.get_indices(trainset, config)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=config["client_batch_size"], shuffle=False, num_workers=2)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=config["client_batch_size"], shuffle=False, num_workers=2)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=config["client_batch_size"], shuffle=False, num_workers=4)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=config["client_batch_size"], shuffle=False, num_workers=4)
     train_partitions = []
 
     # ##### DEBUG
@@ -67,7 +67,7 @@ def get_split_dataset(config):
         partition = torch.utils.data.DataLoader(partition_data, 
                                                 batch_size=config["client_batch_size"], 
                                                 shuffle=True, 
-                                                num_workers=2)
+                                                num_workers=4)
         train_partitions.append(partition)
     
     

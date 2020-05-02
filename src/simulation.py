@@ -17,6 +17,7 @@ class Simulation():
 #         self.config["device"]=device
         if os.path.exists(self.log_file):
             os.system(f"rm {self.log_file}")
+        self.config["n_clients"] -= self.config["n_clients"] % self.config["n_clusters"]
         self.network = Network(self.config)
         self.round_count = None
         self.train_accuracy = []
