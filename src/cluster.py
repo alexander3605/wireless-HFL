@@ -17,6 +17,7 @@ class Cluster():
         self.clients = []
         for i in range(n_clients):
             self.clients.append(Client(clients_id[i], config, training_sets[i], initial_weights))
+        self.n_update_participants = 0
 
 
     def learn(self):
@@ -37,6 +38,7 @@ class Cluster():
         if self.config["debug"]:
             print(f"-- Server {self.sbs.id} learning ...")
         self.sbs.set_average_model(self.clients, selected_clients_inds)
+        self.n_update_participants += len(selected_clients_inds)
         
 
 

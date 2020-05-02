@@ -55,11 +55,14 @@ class Network():
         if self.round_count % self.config["server_global_rate"] == 0:
             if self.config["debug"]:
                 print(f"- MBS learning ...")
-            self.mbs.set_average_model(self.clusters) # generate new global model
+            self.mbs.set_average_model(self.clusters, clusters=True) # generate new global model
             self.mbs.download_model(self.clusters)    # download new global model to clusters
         
             # if self.config["stdout_verbosity"] >= 1:
             #     print(f"%%%% TRAIN ACCURACY:\t{round(self.evaluate_train(),4)}")
+            for i in range(self.config["n_clusters"]):
+                cluster_index = np.unravel_index(i, self.clusters_grid_shape) # 1D index --> 2D index
+                self.clusters[cluster_index].n_update_participants = 0
 
 
     def evaluate(self):
