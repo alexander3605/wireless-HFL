@@ -40,14 +40,13 @@ def get_split_dataset(config):
     testloader = torch.utils.data.DataLoader(testset, batch_size=config["client_batch_size"], shuffle=False, num_workers=4)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=config["client_batch_size"], shuffle=False, num_workers=4)
     train_partitions = []
-
     # ##### DEBUG
     # train_partitions = [trainset for _ in range(config["n_clients"])]
     # return train_partitions, testloader
     # ##### END
     if config["stdout_verbosity"]>=2:
             print("Creating dataset partitions")
-    for partition_n in tqdm(sample_inds):
+    for partition_n in tqdm(range(len(sample_inds))):
         # if config["stdout_verbosity"]>=2:
         #     print(f"Creating dataset partition {partition_n+1} of {len(sample_inds)} ...")
         x_shape = list(np.array(trainset[0][0]).shape)

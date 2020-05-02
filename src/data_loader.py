@@ -95,31 +95,48 @@ def get_indices(trainset, config):
     return inds
 
 
-def get_non_iid_index(trainset, config):
+def get_non_iid_index(trainset, config, classes_per_user=2):
     """Returns the indexes of samples for each user such that the distributions of data for each user
     have a non_iid distribution. Sorts the indexs that have a lablel 0 to label 10. Then equally splits
      the indexes for each user"""
 
     dataset_name = config["dataset_name"]
-    num_users = config["n_clients"]
+    num_users = config["n_clients"] - (config["n_clients"] % config['n_clusters'])
+    
+    if dataset_name in ['mnist', 'cifar10']:
 
-    if dataset_name == 'mnist':
-        num_samples = trainset.train_labels.shape[0]
-        labels = trainset.train_labels.numpy()
-    elif dataset_name == 'cifar10':
-        labels = trainset.targets
-        num_samples = len(labels)
+        if dataset_name == 'mnist':
+            num_samples = trainset.train_labels.shape[0]
+            labels = trainset.train_labels.numpy()
+        elif dataset_name == 'cifar10':
+            labels = trainset.targets
+            num_samples = len(labels)
 
-    inds_sorted = np.argsort(labels) # sort indicies based on labels
-    num_sample_perworker = int(num_samples / num_users)
-
-    indx_sample = {n: [] for n in range(num_users)}
-
-    for user in range(num_users):
-        indx_sample[user] = inds_sorted[user * num_sample_perworker: (user + 1) * num_sample_perworker] # assign indices to each user
-
-    return indx_sample
-
+        
+        n_classes = len(np.unique(labels))
+        samples_per_class = int(len(labels)/n_classes)
+        batches_per_class = int(num_users*classes_per_user/n_classes)
+        samples_per_batch = int(samples_per_class / batches_per_class)
+        inds_sorted = np.argsort(labels) # sort indicies based on labels        
+        inds_classes = np.array([inds_sorted[class_n*samples_per_class:(class_n+1)*samples_per_class] for class_n in range(n_classes)])        
+        batched_samples_per_class = [[samples[batch*samples_per_batch:(batch+1)*samples_per_batch] for batch in range(batches_per_class)] for samples in inds_classes]
+        # Assign batches
+        indx_sample = [[] for n in range(num_users)]
+        i = 0
+        for user in range(num_users):
+            for c in range(classes_per_user):
+                class_chosen = i%n_classes
+#                 print(class_chosen)
+#                 print(batched_samples_per_class)
+                indx_sample[user].append(batched_samples_per_class[class_chosen][0])
+                batched_samples_per_class[class_chosen].remove(batched_samples_per_class[class_chosen][0])
+                i += 1
+        indx_sample = np.array(indx_sample)
+        indx_sample = indx_sample.reshape((indx_sample.shape[0],indx_sample.shape[1]*indx_sample.shape[2]))
+        np.random.shuffle(indx_sample)
+        return indx_sample
+    else:
+        raise ValueError("Dataset name not recognized.")
 
 def get_iid_index(trainset, config):
     """Returns the indexes of samples for each user such that the distributions of data for each user
@@ -127,7 +144,7 @@ def get_iid_index(trainset, config):
      the indexes for each user"""
 
     dataset_name = config["dataset_name"]
-    num_users = config["n_clients"]
+    num_users = config["n_clients"] - (config["n_clients"] % config['n_clusters'])
 
     if dataset_name == 'mnist':
         num_samples = trainset.train_labels.shape[0]

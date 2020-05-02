@@ -27,7 +27,7 @@ class Cluster():
 
         # Select clients
         n_clients = len(self.clients)
-        selected_clients_inds = choice(n_clients, ceil(n_clients*self.config["client_selection_fraction"]))
+        selected_clients_inds = choice(n_clients, ceil(n_clients*self.config["client_selection_fraction"]), replace=False)
         # For each selcted client
         for i in selected_clients_inds:
             # Download sbs model
@@ -39,7 +39,6 @@ class Cluster():
             print(f"-- Server {self.sbs.id} learning ...")
         self.sbs.set_average_model(self.clients, selected_clients_inds)
         self.n_update_participants += len(selected_clients_inds)
-        
 
 
 
