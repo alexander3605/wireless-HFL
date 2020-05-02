@@ -8,7 +8,7 @@ import random
 
 def run_test(config_file):
     device = f"cuda:{random.randint(0,1)}"
-    return os.system(f"python3 main.py {config_file} {device} >/dev/null 2>&1")
+    return os.system(f"python3 main.py --config={config_file} --device={device} >/dev/null 2>&1")
     
     
     
