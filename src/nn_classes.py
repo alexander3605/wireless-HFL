@@ -96,6 +96,24 @@ class SimpleCifarNetNoBN(nn.Module):
         x = self.fc5(x)
         return x
 
+class MyCifarNet(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -191,6 +209,9 @@ def get_simple_cifar_net():
 def get_simple_cifar_net_nobn():
     return SimpleCifarNetNoBN()
 
+def get_mycifarnet():
+    return MyCifarNet()
+
 def get_resnet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
 
@@ -207,6 +228,8 @@ def get_net(config):
         model = get_simple_cifar_net()
     elif name == 'simplecifar_nobn':
         model = get_simple_cifar_net_nobn()
+    elif name == 'mycifar':
+        model = get_mycifarnet()
     elif name == 'resnet18':
         model = get_resnet18()
     else:
