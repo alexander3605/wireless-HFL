@@ -1,6 +1,7 @@
 from nn_classes import get_net
 from my_library import zero_param
 import numpy as np
+from client import Client
 
 class Server():
 
@@ -28,7 +29,7 @@ class Server():
             flattened_clients = clients
         # if indeces are not provided, use all client models
         if selected_idx is None:
-            selected_idx = range(len(flattened_clients)) 
+            selected_idx = range(len(flattened_clients))
         # Get total number of clients
         num_client = len(selected_idx)
         if clusters:
@@ -49,13 +50,11 @@ class Server():
         if type(recipients) == list:
             for i in range(len(recipients)):
                     recipients[i].set_weights(self.get_weights())
-        else:
+        elif type(recipients) == Client:
+                    recipients.set_weights(self.get_weights())
         # NUMPY 2D ARRAY
-            try:    
-                if len(recipients.shape) == 2:
-                    for i in range(np.prod(recipients.shape)):
-                        idx_2D = np.unravel_index(i, recipients.shape)
-                        recipients[idx_2D].set_weights(self.get_weights())
-        # SINGLE OBJECT
-            except:
-                recipients.set_weights(self.get_weights())
+        else:
+            if len(recipients.shape) == 2:
+                for i in range(np.prod(recipients.shape)):
+                    idx_2D = np.unravel_index(i, recipients.shape)
+                    recipients[idx_2D].set_weights(self.get_weights())

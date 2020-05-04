@@ -4,11 +4,14 @@ import torch
 from tqdm import tqdm
 
 class Client():
-    def __init__(self, id, config, train_data, initial_weights):
+    def __init__(self, id, config, train_data, initial_weights, multiGPU=False):
         self.id = id
         self.config = config
         self.train_data = train_data
-        self.model = get_net(config).to(config["device"])
+        model = get_net(config)
+        if torch.cuda.device_count() > 1 and multiGPU:
+            model = nn.DataParallel(model)
+        self.model = model.to(config["device"])
         if initial_weights:
             self.set_weights(initial_weights)
         if config["debug"]:
@@ -29,7 +32,7 @@ class Client():
         if self.config["client_algorithm"] == "sgd":
             optimizer = torch.optim.SGD(self.model.parameters(), 
                                         lr=self.config["client_lr"], 
-                                        weight_decay=0.0001)
+                                        momentum=0.9)
         else:
             raise NotImplementedError
 

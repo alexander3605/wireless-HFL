@@ -5,9 +5,7 @@ from tqdm import tqdm
 import numpy as np
 from pprint import pprint
 import copy
-import threading
-import time
-from multiprocessing import Process, Pool
+
 
 class Network():
     
@@ -42,15 +40,34 @@ class Network():
             raise NotImplementedError
 
 
-
+            
+            
     def learn(self):
         self.round_count += 1
-
         # LEARN IN EACH CLUSTER
+#         t_list = []
+#         res_qs = []
+        max_active = 4
         for i in range(self.config["n_clusters"]):
             cluster_index = np.unravel_index(i, self.clusters_grid_shape) # 1D index --> 2D index
             self.clusters[cluster_index].learn()
-
+                
+#             while len(mp.active_children())>max_active:
+#                 time.sleep(0.2)
+            
+#             print("Starting cluster --",self.clusters[cluster_index].id)
+#             q= mp.Queue()
+#             p = mp.Process(target=parallel_bro, args=(self.clusters[cluster_index].learn, q))
+#             p.start()
+#             t_list.append(p)
+#             res_qs.append(q)
+#         for p in t_list:
+#             p.join()
+#         for q in res_qs:
+#             print("Reading queue...")
+#             print(q.get(timeout=5))
+#             q.task_done()
+        
         # MBS LEARNS FROM SBS
         if self.round_count % self.config["server_global_rate"] == 0:
             if self.config["debug"]:
@@ -58,8 +75,6 @@ class Network():
             self.mbs.set_average_model(self.clusters, clusters=True) # generate new global model
             self.mbs.download_model(self.clusters)    # download new global model to clusters
         
-            # if self.config["stdout_verbosity"] >= 1:
-            #     print(f"%%%% TRAIN ACCURACY:\t{round(self.evaluate_train(),4)}")
             for i in range(self.config["n_clusters"]):
                 cluster_index = np.unravel_index(i, self.clusters_grid_shape) # 1D index --> 2D index
                 self.clusters[cluster_index].n_update_participants = 0
@@ -117,3 +132,6 @@ class Network():
         if self.config["debug"]:
             print("--- NEW DISTRIBUTION")
             pprint(np.array([len(cluster.clients) for cluster in self.clusters.flatten()]).reshape(self.clusters.shape))          
+            
+            
+            
