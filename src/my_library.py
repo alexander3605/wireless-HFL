@@ -176,6 +176,53 @@ def get_clusters_grid_shape(n_clusters):
 
 #########################################################
 #########################################################
+# Average results from different experiments 
+def combine_results(config_files, log_files):
+    combined = []
+    for config_idx, config_file in enumerate(config_files):
+        config = read_log(config_file)
+        comm_rounds = config["stop_value"] if config["stop_condition"]=="rounds" else None
+        n_logs = len(log_files[config_idx])
+        # Get data and combine (average)
+        train_accs = [0 for _ in range(comm_rounds)]
+        test_accs = [0 for _ in range(comm_rounds)]
+        latency = [0 for _ in range(comm_rounds)]
+        for log_file in log_files[config_idx]:
+            log = read_log(log_file)
+            for n_round in range(comm_rounds):
+                train = log[n_round]["train_accuracy"]
+                train = train if train is not None else 0
+                test = log[n_round]["test_accuracy"]
+                test = test if test is not None else 0
+                train_accs[n_round] += train / n_logs
+                test_accs[n_round] += test / n_logs
+                # latency[n_round] += log[n_round]["latency"] / n_logs ### TODO
+        
+        # Save combined results
+        combined_results = {}
+        combined_results["config"] = config
+        combined_results["results"] = {}
+        combined_results["results"]["rounds"] = list(range(1,comm_rounds+1))
+        combined_results["results"]["train_accuracy"] = train_accs
+        combined_results["results"]["test_accuracy"] = test_accs
+        combined_results["results"]["latency"] = latency
+        combined.append(combined_results)
+    return combined
+
+#########################################################
+#########################################################
+# Enter function description
+def save_combined_results(results, old_logs,  delete_old_logs=False):
+    for i,res in enumerate(results):
+        combined_log_name = f"{old_logs[i][0][:-6]}avg.json"
+        write_log(combined_log_name, res)
+        if delete_old_logs:
+            for filename in old_logs[i]:
+                os.system(f"rm {filename}")
+
+
+#########################################################
+#########################################################
 # Enter function description
 def f():
     pass
