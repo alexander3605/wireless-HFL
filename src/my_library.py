@@ -37,15 +37,22 @@ def save_config_to_file(config, destination, indent=1):
 def get_split_dataset(config):
     trainset, testset = dl.get_dataset(config)
     sample_inds = dl.get_indices(trainset, config)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=config["client_batch_size"], shuffle=False, num_workers=4)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=config["client_batch_size"], shuffle=False, num_workers=4)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=config["client_batch_size"], shuffle=False, num_workers=0)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=config["client_batch_size"], shuffle=False, num_workers=0)
     train_partitions = []
     # ##### DEBUG
     # train_partitions = [trainset for _ in range(config["n_clients"])]
     # return train_partitions, testloader
     # ##### END
+    config["data_per_client"] = len(sample_inds[0])
     if config["stdout_verbosity"]>=2:
             print("Creating dataset partitions")
+    if len(sample_inds) == 1:
+        train_partitions = [torch.utils.data.DataLoader(trainset, 
+                                                batch_size=config["client_batch_size"], 
+                                                shuffle=True, 
+                                                num_workers=0)]
+        return trainloader, train_partitions, testloader
     for partition_n in tqdm(range(len(sample_inds))):
         # if config["stdout_verbosity"]>=2:
         #     print(f"Creating dataset partition {partition_n+1} of {len(sample_inds)} ...")
@@ -66,7 +73,7 @@ def get_split_dataset(config):
         partition = torch.utils.data.DataLoader(partition_data, 
                                                 batch_size=config["client_batch_size"], 
                                                 shuffle=True, 
-                                                num_workers=4)
+                                                num_workers=0)
         train_partitions.append(partition)
     
     
@@ -196,7 +203,7 @@ def combine_results(config_files, log_files):
                 test = test if test is not None else 0
                 train_accs[n_round] += train / n_logs
                 test_accs[n_round] += test / n_logs
-                # latency[n_round] += log[n_round]["latency"] / n_logs ### TODO
+                latency[n_round] += log[n_round]["latency"] / n_logs
         
         # Save combined results
         combined_results = {}

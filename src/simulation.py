@@ -22,6 +22,7 @@ class Simulation():
         self.round_count = None
         self.train_accuracy = []
         self.test_accuracy = []
+        self.latency = []
 
     def start(self):
         self.round_count = 0
@@ -30,7 +31,9 @@ class Simulation():
                 self.round_count += 1
                 if self.config["stdout_verbosity"] >= 1:
                     print(f"----\tRound {self.round_count} of {self.config['stop_value']}\t----")
-                self.network.learn()
+                round_latency = self.network.learn()
+                self.latency.append(round_latency)
+                print(f"%%%% ROUND LATENCY:\t{round(self.latency[-1],4)}")
                 self.network.move_clients()
                 if self.round_count % self.config["server_global_rate"] == 0:
                     self.train_accuracy.append(self.network.evaluate_train())
@@ -41,8 +44,9 @@ class Simulation():
         else:
             raise NotImplementedError
         print()
-        print(self.train_accuracy)
-        print(self.test_accuracy)
+        print(f"Train_acc:\t{self.train_accuracy}")
+        print(f"Test_acc: \t{self.test_accuracy}")
+        print(f"Latency:  \t{self.latency}")
 
 
     def log(self):
@@ -58,6 +62,10 @@ class Simulation():
             update["test_accuracy"] = self.test_accuracy[-1]
         else:
             update["test_accuracy"] = None
+
+        if self.latency:
+            update["latency"] = self.latency[-1]
+        else:
+            update["latency"] = None
+        
         update_log(self.log_file, update)
-
-

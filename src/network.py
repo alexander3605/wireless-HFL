@@ -44,30 +44,15 @@ class Network():
             
     def learn(self):
         self.round_count += 1
+        round_latency = 0
         # LEARN IN EACH CLUSTER
-#         t_list = []
-#         res_qs = []
-        max_active = 4
         for i in range(self.config["n_clusters"]):
             cluster_index = np.unravel_index(i, self.clusters_grid_shape) # 1D index --> 2D index
-            self.clusters[cluster_index].learn()
-                
-#             while len(mp.active_children())>max_active:
-#                 time.sleep(0.2)
-            
-#             print("Starting cluster --",self.clusters[cluster_index].id)
-#             q= mp.Queue()
-#             p = mp.Process(target=parallel_bro, args=(self.clusters[cluster_index].learn, q))
-#             p.start()
-#             t_list.append(p)
-#             res_qs.append(q)
-#         for p in t_list:
-#             p.join()
-#         for q in res_qs:
-#             print("Reading queue...")
-#             print(q.get(timeout=5))
-#             q.task_done()
-        
+            cluster_latency = self.clusters[cluster_index].learn()
+            # TODO: use cluster_latency to compute network latency across rounds
+            # NOTE: synchronization of clusters is only needed when there is a global update! 
+            #       But what about clients that have moved but are still in use in their previous cluster? 
+            round_latency = max(round_latency, cluster_latency)
         # MBS LEARNS FROM SBS
         if self.round_count % self.config["server_global_rate"] == 0:
             if self.config["debug"]:
@@ -78,6 +63,7 @@ class Network():
             for i in range(self.config["n_clusters"]):
                 cluster_index = np.unravel_index(i, self.clusters_grid_shape) # 1D index --> 2D index
                 self.clusters[cluster_index].n_update_participants = 0
+        return round_latency
 
 
     def evaluate(self):
@@ -92,7 +78,7 @@ class Network():
 
 
     def move_clients(self):
-        if self.config["clients_mobility"]:
+        if self.config["clients_mobility"] and self.config["n_clusters"]>1:
             
             # print("OLD DISTRIBUTION")
             # pprint(np.array([len(cluster.clients) for cluster in self.clusters.flatten()]).reshape(self.clusters.shape))

@@ -2,6 +2,9 @@ from client import Client
 from server import Server
 from numpy.random import choice
 from math import ceil
+from latency import rand_comp_time, downlink_latency, uplink_latency
+from my_library import count_parameters
+from nn_classes import get_net
 
 class Cluster():
 
@@ -24,7 +27,13 @@ class Cluster():
         if self.config["debug"]:
             print(f"- Cluster {self.id} learning ...")
         self.round_count += 1
+        if self.config["client_algorithm"] == "scaffold":
+            return self.learn_scaffold()
+        else:
+            return self.learn_sgd()
 
+
+    def learn_sgd(self):
         # Select clients
         n_clients = len(self.clients)
         selected_clients_inds = choice(n_clients, ceil(n_clients*self.config["client_selection_fraction"]), replace=False)
@@ -34,12 +43,56 @@ class Cluster():
             self.sbs.download_model(self.clients[i])
             # Update model
             self.clients[i].learn()
-        # Average updates
+         # Average updates
         if self.config["debug"]:
             print(f"-- Server {self.sbs.id} learning ...")
         self.sbs.set_average_model(self.clients, selected_clients_inds)
         self.n_update_participants += len(selected_clients_inds)
+        if len(selected_clients_inds) > 0: 
+            round_latency = self.get_round_latency(selected_clients_inds)
+            return round_latency
+        else:
+            return 0
 
+
+        
+    def learn_scaffold(self):
+        # Select clients
+        n_clients = len(self.clients)
+        selected_clients_inds = choice(n_clients, ceil(n_clients*self.config["client_selection_fraction"]), replace=False)
+        # For each selcted client
+        for i in selected_clients_inds:
+            # Download sbs model
+            self.sbs.download_model(self.clients[i])
+            # Update model
+            self.clients[i].learn(self.sbs.control_variate)
+        # Update sbs control variate
+        # for i in selected_clients_inds:
+        #     for layer_idx, update in enumerate(self.clients[i].c_variate_update):
+        #         self.sbs.control_variate[layer_idx] += update/n_clients
+         # Average updates
+        if self.config["debug"]:
+            print(f"-- Server {self.sbs.id} learning ...")
+        self.sbs.set_average_model(self.clients, selected_clients_inds)
+        self.n_update_participants += len(selected_clients_inds)
+        if len(selected_clients_inds) > 0: 
+            round_latency = self.get_round_latency(selected_clients_inds)
+            return round_latency
+        else:
+            return 0
+
+
+    def get_round_latency(self, selected_clients):
+        model_size = count_parameters(get_net(self.config))*16 # HALF-PRECISION floating point... 
+
+        dl_latency = downlink_latency(self.config, len(self.clients), selected_clients, model_size)
+        # print("downlink latency", round(dl_latency,1),sep="\t")
+        comptime = rand_comp_time(self.config, len(selected_clients))
+        ul_latency = uplink_latency(self.config, len(self.clients), selected_clients,comptime,model_size) 
+        # print("uplink latency", round(ul_latency,1),sep="\t\t")
+
+        
+        return(dl_latency + ul_latency)
 
 
     def get_weights(self):
