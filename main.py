@@ -28,7 +28,8 @@ def run_simulator(config_location, is_folder, device,n_experiments):
     simulator.start()
     print("Combining results files...")
     combined_res = combine_results(simulator.config_files, simulator.log_files)
-    save_combined_results(combined_res, simulator.log_files, delete_old_logs=True)
+    # save_combined_results(combined_res, simulator.log_files, delete_old_logs=True)
+    save_combined_results(combined_res, simulator.log_files, delete_old_logs=False)
     print("DONE.")
 
 if __name__ == "__main__":
