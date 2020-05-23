@@ -1,6 +1,6 @@
 from cluster import Cluster
 from server import Server
-from my_library import get_split_dataset, evaluate_accuracy, get_clusters_grid_shape
+from my_library import get_split_dataset, evaluate_accuracy, get_clusters_grid_shape, get_weight_divergence
 from tqdm import tqdm
 import numpy as np
 from pprint import pprint
@@ -39,6 +39,8 @@ class Network():
         else:
             raise NotImplementedError
 
+        self.weight_divergence = None
+
 
             
             
@@ -58,11 +60,34 @@ class Network():
             if self.config["debug"]:
                 print(f"- MBS learning ...")
             self.mbs.set_average_model(self.clusters, clusters=True) # generate new global model
+
+            # COMPUTE WEIGHT DIVERGENCE
+            divergence_list = []
+            for cluster in self.clusters.flatten():
+                cluster.weight_divergence = get_weight_divergence(cluster.sbs.model, self.mbs.model) 
+                divergence_list.append(cluster.weight_divergence)
+            self.weight_divergence = float(np.mean(divergence_list))
+
+            # DOWNLOAD NEW GLOBAL MODEL TO CLUSTERS 
             self.mbs.download_model(self.clusters)    # download new global model to clusters
-        
+
+            # IF SCAFFOLD, GENERATE AND DISTRIBUTE GLOBAL CONTROL VARIATE
+            if self.config["client_algorithm"] == "scaffold":
+                for i in range(len(self.mbs.control_variate)):
+                    self.mbs.control_variate[i] = sum([c.sbs.control_variate[i] for c in self.clusters.flatten()])/self.config["n_clusters"]
+                    for c in self.clusters.flatten():
+                        c.sbs.control_variate[i].data = self.mbs.control_variate[i].data
+                        # print(hex(id(c.sbs.control_variate[i])))
+                        # print(hex(id(self.mbs.control_variate[i])))
+
+
+            # Get clusters internal variables ready for next set of rounds
             for i in range(self.config["n_clusters"]):
                 cluster_index = np.unravel_index(i, self.clusters_grid_shape) # 1D index --> 2D index
                 self.clusters[cluster_index].n_update_participants = 0
+
+
+            
         return round_latency
 
 
@@ -119,5 +144,21 @@ class Network():
             print("--- NEW DISTRIBUTION")
             pprint(np.array([len(cluster.clients) for cluster in self.clusters.flatten()]).reshape(self.clusters.shape))          
             
+
+
+    def log(self):
+        log_dict = {}
+        
+        # # Measure accuracy of sbs models
+        # clusters_test_acc = []
+        # for cluster in self.clusters.flatten():
+        #     test_acc = evaluate_accuracy(cluster.sbs.model, self.test_set, self.config["device"])
+        #     clusters_test_acc.append(test_acc)
+        # log_dict["clusters_test_accuracy"] = clusters_test_acc
+        
+        
+        log_dict["weight_divergence"] = self.weight_divergence
+        return log_dict
+
             
             

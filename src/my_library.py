@@ -194,17 +194,26 @@ def combine_results(config_files, log_files):
         train_accs = [0 for _ in range(comm_rounds)]
         test_accs = [0 for _ in range(comm_rounds)]
         latency = [0 for _ in range(comm_rounds)]
+        weight_divergence = [0 for _ in range(comm_rounds)]
+        latency_median_ls = []
         for log_file in log_files[config_idx]:
             log = read_log(log_file)
             for n_round in range(comm_rounds):
                 train = log[n_round]["train_accuracy"]
                 train = train if train is not None else 0
+                train_accs[n_round] += train / n_logs
+
                 test = log[n_round]["test_accuracy"]
                 test = test if test is not None else 0
-                train_accs[n_round] += train / n_logs
                 test_accs[n_round] += test / n_logs
+                
                 latency[n_round] += log[n_round]["latency"] / n_logs
-        
+                latency_median_ls.append(log[n_round]["latency"])
+
+                div = log[n_round]["weight_divergence"]
+                div = div if div is not None else 0
+                weight_divergence[n_round] += div / n_logs
+
         # Save combined results
         combined_results = {}
         combined_results["config"] = config
@@ -213,6 +222,8 @@ def combine_results(config_files, log_files):
         combined_results["results"]["train_accuracy"] = train_accs
         combined_results["results"]["test_accuracy"] = test_accs
         combined_results["results"]["latency"] = latency
+        combined_results["results"]["latency_median"] = np.median(latency_median_ls)
+        combined_results["results"]["weight_divergence"] = weight_divergence
         combined.append(combined_results)
     return combined
 
@@ -227,6 +238,22 @@ def save_combined_results(results, old_logs,  delete_old_logs=False):
             for filename in old_logs[i]:
                 os.system(f"rm {filename}")
 
+
+
+#########################################################
+#########################################################
+# Compute weight divergence between model parameters and
+# server model parameters
+def get_weight_divergence(model, server_model):
+
+    weights = [torch.flatten(p) for p in model.parameters() if p.requires_grad]
+    server_weights = [torch.flatten(p) for p in server_model.parameters() if p.requires_grad]
+    diff = [weights[i]-server_weights[i] for i in range(len(weights))]
+
+    norm_diff = np.linalg.norm(torch.cat(diff).detach().cpu(), ord=1)
+    norm_server = np.linalg.norm(torch.cat(server_weights).detach().cpu())
+
+    return norm_diff / norm_server
 
 #########################################################
 #########################################################

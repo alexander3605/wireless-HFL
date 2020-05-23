@@ -1,6 +1,7 @@
 from nn_classes import get_net
-from my_library import zero_param
+from my_library import zero_param, count_parameters
 import numpy as np
+import torch
 from client import Client
 
 class Server():
@@ -11,6 +12,8 @@ class Server():
         self.model = get_net(config).to(config["device"])
         if initial_weights:
             self.set_weights(initial_weights)
+        if config["client_algorithm"] == "scaffold":
+            self.control_variate = [torch.zeros(p.shape, device=self.config["device"]) for p in self.model.parameters() if p.requires_grad]
 
 
     def get_weights(self):
@@ -22,7 +25,6 @@ class Server():
 
     # Averages the user models in the server
     def set_average_model(self, clients, selected_idx=None, clusters=False):
-        zero_param(self.model)
         try: 
             flattened_clients = clients.flatten()
         except:
@@ -32,16 +34,17 @@ class Server():
             selected_idx = range(len(flattened_clients))
         # Get total number of clients
         num_client = len(selected_idx)
+        zero_param(self.model)
         if clusters:
             participants_weights = np.array([cluster.n_update_participants for cluster in flattened_clients])
             participants_weights = participants_weights / np.sum(participants_weights)
             for ind in selected_idx:
                 for param_user, param_server in zip(flattened_clients[ind].get_weights(), self.model.parameters()):
-                    param_server.data += param_user.data[:] * participants_weights[ind] + 0
+                    param_server.data += param_user.data[:] * participants_weights[ind]
         else:
             for ind in selected_idx:
                 for param_user, param_server in zip(flattened_clients[ind].get_weights(), self.model.parameters()):
-                    param_server.data += param_user.data[:] / num_client + 0
+                    param_server.data += param_user.data[:] / num_client
 
     # Copies server weights to recipients models 
     # (recipient can be a single object or a list)

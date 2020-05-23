@@ -21,6 +21,7 @@ class Cluster():
         for i in range(n_clients):
             self.clients.append(Client(clients_id[i], config, training_sets[i], initial_weights))
         self.n_update_participants = 0
+        self.weight_divergence = None
 
 
     def learn(self):
@@ -66,10 +67,13 @@ class Cluster():
             self.sbs.download_model(self.clients[i])
             # Update model
             self.clients[i].learn(self.sbs.control_variate)
+            # Update client control variate
+            self.clients[i].update_control_variate(self.sbs.model, self.sbs.control_variate)
         # Update sbs control variate
-        # for i in selected_clients_inds:
-        #     for layer_idx, update in enumerate(self.clients[i].c_variate_update):
-        #         self.sbs.control_variate[layer_idx] += update/n_clients
+        total_clients = self.config["n_clients"]
+        for i in selected_clients_inds:
+            for layer_idx, update in enumerate(self.clients[i].c_variate_update):
+                self.sbs.control_variate[layer_idx] += update/total_clients
          # Average updates
         if self.config["debug"]:
             print(f"-- Server {self.sbs.id} learning ...")

@@ -18,6 +18,7 @@ class Simulation():
         if os.path.exists(self.log_file):
             os.system(f"rm {self.log_file}")
         self.config["n_clients"] -= self.config["n_clients"] % self.config["n_clusters"]
+        self.config["client_lr"] *= self.config["client_batch_size"] / 32
         self.network = Network(self.config)
         self.round_count = None
         self.train_accuracy = []
@@ -40,6 +41,7 @@ class Simulation():
                     print(f"%%%% TRAIN ACCURACY:\t{round(self.train_accuracy[-1],4)}")
                     self.test_accuracy.append(self.network.evaluate())
                     print(f"%%%% TEST ACCURACY:\t{self.test_accuracy[-1]}")
+                    print(f"%%%% WEIGHT DIVERGENCE:\t{round(float(self.network.weight_divergence),4)}")
                 self.log()
         else:
             raise NotImplementedError
@@ -51,21 +53,30 @@ class Simulation():
 
     def log(self):
         update = {}
+        ##
         update["round"] = self.round_count
-        # update["network"] = self.network.log()
+        ##
         if self.train_accuracy:
             update["train_accuracy"] = self.train_accuracy[-1]
         else:
             update["train_accuracy"] = None
-        
+        ##
         if self.test_accuracy:
             update["test_accuracy"] = self.test_accuracy[-1]
         else:
             update["test_accuracy"] = None
-
+        ##
         if self.latency:
             update["latency"] = self.latency[-1]
         else:
             update["latency"] = None
-        
+        ##
+        update["weight_divergence"] = self.network.weight_divergence
+        # network_log = self.network.log()
+        # if network_log:
+        #     update["network"] = network_log
+
+        # print(update)
+        # exit()
+        #######################################
         update_log(self.log_file, update)
