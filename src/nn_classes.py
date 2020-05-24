@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.models import inception_v3, mobilenet_v2
 
 class MnistNet(nn.Module):
     def __init__(self):
@@ -220,6 +221,13 @@ def get_resnet18():
 def ResNet34():
     return ResNet(BasicBlock, [3, 4, 6, 3])
 
+def get_inceptionNet():
+    return inception_v3()
+
+def get_mobileNet():
+    return mobilenet_v2()
+
+
 def get_net(config):
     name = config["model_type"]
     if name == 'mnist':
@@ -234,6 +242,10 @@ def get_net(config):
         model = get_mycifarnet()
     elif name == 'resnet18':
         model = get_resnet18()
+    elif name == 'inceptionNet':
+        model = get_inceptionNet()
+    elif name == 'mobileNet':
+        model = get_mobileNet()
     else:
         raise ValueError('NN model can only be mnist, fmnist, simplecifar, resnet18',
                          'Be sure that NN model is compatible with the dataset')
