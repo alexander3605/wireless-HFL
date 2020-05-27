@@ -258,5 +258,19 @@ def get_weight_divergence(model, server_model):
 #########################################################
 #########################################################
 # Enter function description
+def filter_results(metadata, results, filters, sort_by=[]):
+    selected_meta = copy.deepcopy(metadata)
+    for f in filters.keys():
+        f_vals = filters[f]
+        if f_vals:
+            selected_meta = selected_meta[selected_meta[f].isin(f_vals)]
+    if sort_by:
+        selected_meta = selected_meta.sort_values(sort_by)
+    selected_res = results.loc[list(selected_meta.index)]
+    return selected_meta, selected_res
+
+#########################################################
+#########################################################
+# Enter function description
 def f():
     pass
