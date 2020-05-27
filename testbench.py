@@ -27,14 +27,14 @@ from pprint import pprint
 
 TEST_RESULTS_DIR = "log_files"
 CONFIG_DIR = "config_files"
-MAX_THREADS = 10
+MAX_THREADS = 6
 N_EXPERIMENTS = 9
 # N_EXPERIMENTS = 1 # DEBUG
 
 def run_test(config_file, n_exp=N_EXPERIMENTS):
     device = f"cuda:{random.randint(0,1)}"
     # # DEBUG
-    device = "cuda:1"
+    # device = "cuda:0"
     return os.system(f"python3 main.py --config={config_file} --device={device} --n_experiments={n_exp} >/dev/null 2>&1")
     
     
@@ -54,12 +54,13 @@ if __name__ == "__main__":
     dataset_name = ["mnist"]
     dataset_distribution = ["iid", "non_iid"]
     client_algorithm = ["sgd"]
-    client_batch_size = [32,64,128]
-    client_n_epochs = [1,2,4]
+    client_batch_size = [32]
+    client_n_epochs = [2,4]
     client_lr = [0.0100]
-    server_global_rate = [1,3,5,7]
+    server_global_rate = [1]
     client_selection_fraction = [0.3]
-    lr_warmup = [True]
+    lr_warmup = [False, True]
+    epochs_delay_localSGD = [5,10]
 #  "log_file": "log_files/test_log"
     log_verbosity = [2]
     log_frequency = [1]
@@ -92,7 +93,7 @@ if __name__ == "__main__":
                    field blank is a safer option)
     '''
     
-    results_name_root = "mnist_sgd_lr-warmup"
+    results_name_root = "mnist_post-local-sgd"
     
     #################################################################
     #################################################################
@@ -113,6 +114,7 @@ if __name__ == "__main__":
     params["server_global_rate"] = server_global_rate
     params["client_selection_fraction"] = client_selection_fraction
     params["lr_warmup"] = lr_warmup
+    params["epochs_delay_localSGD"] = epochs_delay_localSGD
 #  "log_file": "log_files/test_log"
     params["log_verbosity"] = log_verbosity
     params["log_frequency"] = log_frequency
