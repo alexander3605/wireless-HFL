@@ -31,26 +31,26 @@ class Client():
             param.data[:] = param_in.data[:] + 0
 
 
-    def learn(self,l_rate, server_control_variate=None):
+    def learn(self,l_rate, local_iter, server_control_variate=None):
         if self.config["debug"]:
             print(f"--- Client {self.id} learning ...")
 
         if self.config["client_algorithm"] == "sgd":
-            self.learn_sgd(l_rate)
+            self.learn_sgd(l_rate, local_iter)
         elif self.config["client_algorithm"] == "scaffold":
-            self.learn_scaffold(l_rate,server_control_variate)
+            self.learn_scaffold(l_rate, local_iter, server_control_variate)
         else:
             raise NotImplementedError
 
 
-    def learn_sgd(self, l_rate):
+    def learn_sgd(self, l_rate, local_iter):
         optimizer = torch.optim.SGD(self.model.parameters(), 
                                     lr=l_rate, 
                                     momentum=0.9)
 
         criterion = nn.CrossEntropyLoss()
         device = self.config["device"]
-        for epoch in range(self.config["client_n_epochs"]):
+        for epoch in range(local_iter):
             for data in self.train_data:
                 inputs, labels = data
                 inputs, labels = inputs.to(device), labels.to(device)
@@ -60,8 +60,8 @@ class Client():
                 loss.backward()
                 optimizer.step()
 
-
-    def learn_scaffold(self,l_rate, server_control_variate):
+ 
+    def learn_scaffold(self, l_rate, local_iter, server_control_variate):
         GRAD_CLIP_VALUE = 1e6
         # GRAD_CLIP_VALUE = 1e2
         # print(self.control_variate.shape)
@@ -73,7 +73,7 @@ class Client():
         criterion = nn.CrossEntropyLoss()
         device = self.config["device"]
 
-        for epoch in range(self.config["client_n_epochs"]):
+        for epoch in range(local_iter):
             see=0
             for data in self.train_data:
                 see += 1
@@ -97,7 +97,7 @@ class Client():
                 optimizer.step()
 
     
-    def update_control_variate(self, server_model, server_control_variate):
+    def update_control_variate(self, l_rate, local_iter, server_model, server_control_variate):
         # Update client control variate
         # self.c_variate_update = []
         server_trainable_params =  [p for p in server_model.parameters() if p.requires_grad]
@@ -105,7 +105,7 @@ class Client():
         
         for i,c in enumerate(self.control_variate):
             weights_diff = server_trainable_params[i] - client_trainable_params[i]
-            update = - server_control_variate[i] + weights_diff / ((len(self.train_data)*self.config["client_n_epochs"] * self.config["client_lr"])) 
+            update = - server_control_variate[i] + weights_diff / ((len(self.train_data)*local_iter * l_rate)) 
             c += update
             self.c_variate_update[i] = update 
         # for layer_idx in range(len(self.control_variate)):

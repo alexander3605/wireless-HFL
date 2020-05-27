@@ -21,6 +21,12 @@ class Simulation():
         self.config["client_lr"] *= self.config["client_batch_size"] / 32
         if "lr_warmup" not in self.config.keys():
             self.config["lr_warmup"] = False
+
+        if "epochs_delay_localSGD" not in self.config.keys():
+            self.config["epochs_delay_localSGD"] = 0
+            self.config["rounds_delay_localSGD"] = 0
+        elif self.config["epochs_delay_localSGD"] >= 0:
+            self.config["rounds_delay_localSGD"] = round(self.config["epochs_delay_localSGD"] / self.config["client_selection_fraction"])
         self.network = Network(self.config)
         self.round_count = None
         self.train_accuracy = []
