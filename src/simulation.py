@@ -19,6 +19,8 @@ class Simulation():
             os.system(f"rm {self.log_file}")
         self.config["n_clients"] -= self.config["n_clients"] % self.config["n_clusters"]
         self.config["client_lr"] *= self.config["client_batch_size"] / 32
+        if "lr_warmup" not in self.config.keys():
+            self.config["lr_warmup"] = False
         self.network = Network(self.config)
         self.round_count = None
         self.train_accuracy = []
@@ -37,7 +39,8 @@ class Simulation():
                 print(f"%%%% ROUND LATENCY:\t{round(self.latency[-1],4)}")
                 self.network.move_clients()
                 if self.round_count % self.config["server_global_rate"] == 0:
-                    self.train_accuracy.append(self.network.evaluate_train())
+                    # self.train_accuracy.append(self.network.evaluate_train())
+                    self.train_accuracy.append(0.0) ## DEBUG
                     print(f"%%%% TRAIN ACCURACY:\t{round(self.train_accuracy[-1],4)}")
                     self.test_accuracy.append(self.network.evaluate())
                     print(f"%%%% TEST ACCURACY:\t{self.test_accuracy[-1]}")

@@ -25,16 +25,25 @@ class Cluster():
 
 
     def learn(self):
+        l_rate = self.config["client_lr"]
+        if self.config["lr_warmup"]:
+            rounds_per_epoch = round(1/self.config["client_selection_fraction"])
+            WARMUP_EPOCHS = 5
+            rates = [0.1 + 0.9*i/WARMUP_EPOCHS for i in range(WARMUP_EPOCHS)]
+            n_block = int((self.round_count-1)/rounds_per_epoch)
+            if n_block < len(rates):
+                rate =  rates[n_block]
+                l_rate = l_rate * rate 
         if self.config["debug"]:
             print(f"- Cluster {self.id} learning ...")
         self.round_count += 1
         if self.config["client_algorithm"] == "scaffold":
-            return self.learn_scaffold()
+            return self.learn_scaffold(l_rate)
         else:
-            return self.learn_sgd()
+            return self.learn_sgd(l_rate)
 
 
-    def learn_sgd(self):
+    def learn_sgd(self, l_rate):
         # Select clients
         n_clients = len(self.clients)
         selected_clients_inds = choice(n_clients, ceil(n_clients*self.config["client_selection_fraction"]), replace=False)
@@ -43,7 +52,7 @@ class Cluster():
             # Download sbs model
             self.sbs.download_model(self.clients[i])
             # Update model
-            self.clients[i].learn()
+            self.clients[i].learn(l_rate)
          # Average updates
         if self.config["debug"]:
             print(f"-- Server {self.sbs.id} learning ...")
@@ -57,7 +66,7 @@ class Cluster():
 
 
         
-    def learn_scaffold(self):
+    def learn_scaffold(self, l_rate):
         # Select clients
         n_clients = len(self.clients)
         selected_clients_inds = choice(n_clients, ceil(n_clients*self.config["client_selection_fraction"]), replace=False)
@@ -66,8 +75,9 @@ class Cluster():
             # Download sbs model
             self.sbs.download_model(self.clients[i])
             # Update model
-            self.clients[i].learn(self.sbs.control_variate)
+            self.clients[i].learn(l_rate, self.sbs.control_variate)
             # Update client control variate
+            raise NotImplementedError
             self.clients[i].update_control_variate(self.sbs.model, self.sbs.control_variate)
         # Update sbs control variate
         total_clients = self.config["n_clients"]

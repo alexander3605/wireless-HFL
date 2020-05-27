@@ -31,21 +31,21 @@ class Client():
             param.data[:] = param_in.data[:] + 0
 
 
-    def learn(self, server_control_variate=None):
+    def learn(self,l_rate, server_control_variate=None):
         if self.config["debug"]:
             print(f"--- Client {self.id} learning ...")
 
         if self.config["client_algorithm"] == "sgd":
-            self.learn_sgd()
+            self.learn_sgd(l_rate)
         elif self.config["client_algorithm"] == "scaffold":
-            self.learn_scaffold(server_control_variate)
+            self.learn_scaffold(l_rate,server_control_variate)
         else:
             raise NotImplementedError
 
 
-    def learn_sgd(self):
+    def learn_sgd(self, l_rate):
         optimizer = torch.optim.SGD(self.model.parameters(), 
-                                    lr=self.config["client_lr"], 
+                                    lr=l_rate, 
                                     momentum=0.9)
 
         criterion = nn.CrossEntropyLoss()
@@ -61,14 +61,14 @@ class Client():
                 optimizer.step()
 
 
-    def learn_scaffold(self, server_control_variate):
+    def learn_scaffold(self,l_rate, server_control_variate):
         GRAD_CLIP_VALUE = 1e6
         # GRAD_CLIP_VALUE = 1e2
         # print(self.control_variate.shape)
         # print(server_control_variate)
         # print(len(self.train_data))
         optimizer = torch.optim.SGD(self.model.parameters(), 
-                                    lr=self.config["client_lr"])
+                                    lr=l_rate)
 
         criterion = nn.CrossEntropyLoss()
         device = self.config["device"]

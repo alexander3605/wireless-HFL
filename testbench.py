@@ -27,14 +27,14 @@ from pprint import pprint
 
 TEST_RESULTS_DIR = "log_files"
 CONFIG_DIR = "config_files"
-MAX_THREADS = 15
-N_EXPERIMENTS = 10
+MAX_THREADS = 10
+N_EXPERIMENTS = 9
 # N_EXPERIMENTS = 1 # DEBUG
 
 def run_test(config_file, n_exp=N_EXPERIMENTS):
     device = f"cuda:{random.randint(0,1)}"
     # # DEBUG
-    # device = "cpu"
+    device = "cuda:1"
     return os.system(f"python3 main.py --config={config_file} --device={device} --n_experiments={n_exp} >/dev/null 2>&1")
     
     
@@ -59,6 +59,7 @@ if __name__ == "__main__":
     client_lr = [0.0100]
     server_global_rate = [1,3,5,7]
     client_selection_fraction = [0.3]
+    lr_warmup = [True]
 #  "log_file": "log_files/test_log"
     log_verbosity = [2]
     log_frequency = [1]
@@ -91,7 +92,7 @@ if __name__ == "__main__":
                    field blank is a safer option)
     '''
     
-    results_name_root = "mnist_iid_sgd"
+    results_name_root = "mnist_sgd_lr-warmup"
     
     #################################################################
     #################################################################
@@ -111,6 +112,7 @@ if __name__ == "__main__":
     params["client_lr"] = client_lr
     params["server_global_rate"] = server_global_rate
     params["client_selection_fraction"] = client_selection_fraction
+    params["lr_warmup"] = lr_warmup
 #  "log_file": "log_files/test_log"
     params["log_verbosity"] = log_verbosity
     params["log_frequency"] = log_frequency
