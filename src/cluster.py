@@ -103,7 +103,8 @@ class Cluster():
 
     def get_round_latency(self, selected_clients):
         model_size = count_parameters(get_net(self.config))*16 # HALF-PRECISION floating point... 
-
+        if self.config["client_algorithm"] == "scaffold":
+            model_size *= 2 #Include also the control variate
         dl_latency = downlink_latency(self.config, len(self.clients), selected_clients, model_size)
         # print("downlink latency", round(dl_latency,1),sep="\t")
         comptime = rand_comp_time(self.config, len(selected_clients))
