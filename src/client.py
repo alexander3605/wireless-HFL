@@ -20,6 +20,8 @@ class Client():
         if self.config["client_algorithm"] == "scaffold":
             self.control_variate = [torch.zeros(p.shape, device=self.config["device"]) for p in self.model.parameters() if p.requires_grad]
             self.c_variate_update = [torch.zeros(p.shape, device=self.config["device"]) for p in self.model.parameters() if p.requires_grad]
+        if self.config["save_memory"]:
+            del self.model
         if config["debug"]:
             print("--------Init client", self.id)
 

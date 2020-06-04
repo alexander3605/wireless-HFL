@@ -56,6 +56,8 @@ class Cluster():
         # For each selcted client
         for i in selected_clients_inds:
             # Download sbs model
+            if self.config["save_memory"]:
+                self.clients[i].model = get_net(self.config).to(self.config["device"])
             self.sbs.download_model(self.clients[i])
             # Update model
             self.clients[i].learn(l_rate, local_iter)
@@ -64,6 +66,11 @@ class Cluster():
             print(f"-- Server {self.sbs.id} learning ...")
         self.sbs.set_average_model(self.clients, selected_clients_inds)
         self.n_update_participants += len(selected_clients_inds)
+        
+        if self.config["save_memory"]:
+            for i in selected_clients_inds:
+                del self.clients[i].model
+        
         if len(selected_clients_inds) > 0: 
             round_latency = self.get_round_latency(selected_clients_inds)
             return round_latency
@@ -79,6 +86,8 @@ class Cluster():
         # For each selcted client
         for i in selected_clients_inds:
             # Download sbs model
+            if self.config["save_memory"]:
+                self.clients[i].model = get_net(self.config).to(self.config["device"])
             self.sbs.download_model(self.clients[i])
             # Update model
             self.clients[i].learn(l_rate, local_iter, self.sbs.control_variate)
@@ -94,6 +103,11 @@ class Cluster():
             print(f"-- Server {self.sbs.id} learning ...")
         self.sbs.set_average_model(self.clients, selected_clients_inds)
         self.n_update_participants += len(selected_clients_inds)
+        
+        if self.config["save_memory"]:
+            for i in selected_clients_inds:
+                del self.clients[i].model
+        
         if len(selected_clients_inds) > 0: 
             round_latency = self.get_round_latency(selected_clients_inds)
             return round_latency

@@ -27,6 +27,13 @@ class Simulation():
             self.config["rounds_delay_localSGD"] = 0
         elif self.config["epochs_delay_localSGD"] >= 0:
             self.config["rounds_delay_localSGD"] = round(self.config["epochs_delay_localSGD"] / self.config["client_selection_fraction"])
+
+        if self.config["model_type"] == "mobileNet":
+            self.config["save_memory"] = True
+        else:
+            self.config["save_memory"] = False
+        self.config["save_memory"] = True ### DEBUG
+
         self.network = Network(self.config)
         self.round_count = None
         self.train_accuracy = []
