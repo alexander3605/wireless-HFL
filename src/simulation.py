@@ -32,7 +32,6 @@ class Simulation():
             self.config["save_memory"] = True
         else:
             self.config["save_memory"] = False
-        self.config["save_memory"] = True ### DEBUG
 
         self.network = Network(self.config)
         self.round_count = None
