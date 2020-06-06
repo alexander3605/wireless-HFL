@@ -3,6 +3,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 import numpy as np
+from src.my_library import get_clusters_grid_shape
 
 
 def get_mnist_dataset():
@@ -91,6 +92,8 @@ def get_indices(trainset, config):
         inds = get_iid_index(trainset, config)
     elif config["dataset_distribution"] == 'non_iid':
         inds = get_non_iid_index(trainset, config)
+    elif config["dataset_distribution"] == 'non_iid_spatial':
+        inds = get_non_iid_spatial_index(trainset, config)
     else:
         raise ValueError('Dataset distribution can only be iid or non_iid')
     return inds
@@ -135,6 +138,48 @@ def get_non_iid_index(trainset, config, classes_per_user=2):
         indx_sample = np.array(indx_sample)
         indx_sample = indx_sample.reshape((indx_sample.shape[0],indx_sample.shape[1]*indx_sample.shape[2]))
         np.random.shuffle(indx_sample)
+        return indx_sample
+    else:
+        raise ValueError("Dataset name not recognized.")
+
+def get_non_iid_spatial_index(trainset, config):
+    """Returns the indexes of samples for each user such that the distributions of data for each user
+    have a non_iid distribution. Sorts the indexs that have a lablel 0 to label 10. Then equally splits
+     the indexes for each user"""
+
+    dataset_name = config["dataset_name"]
+    num_users = config["n_clients"] - (config["n_clients"] % config['n_clusters'])
+    num_clusters = config['n_clusters']
+    clusters_grid_shape = get_clusters_grid_shape(config['n_clusters'])
+
+
+    if dataset_name in ['mnist', 'cifar10']:
+
+        if dataset_name == 'mnist':
+            num_samples = trainset.train_labels.shape[0]
+            labels = trainset.train_labels.numpy()
+        elif dataset_name == 'cifar10':
+            labels = trainset.targets
+            num_samples = len(labels)
+
+           
+        inds_sorted = np.argsort(labels) # sort indices based on labels  
+        samples_per_cluster = int(len(labels)/num_clusters)
+        cluster_batches = np.array([inds_sorted[samples_per_cluster*i : samples_per_cluster*(i+1)] for i in range(num_clusters)], dtype=int).reshape((clusters_grid_shape[0],clusters_grid_shape[1],samples_per_cluster))
+        for i in range(1,len(cluster_batches),2):
+            cluster_batches[i] = cluster_batches[i][::-1]
+        cluster_batches = cluster_batches.reshape((clusters_grid_shape[0]*clusters_grid_shape[1],samples_per_cluster))
+        clients_per_cluster = int(num_users/num_clusters)
+        samples_per_client = int(samples_per_cluster / clients_per_cluster)
+        
+        indx_sample = [[] for n in range(num_users)]
+        
+        for cluster_id in range(num_clusters):
+            cluster_data = cluster_batches[cluster_id]
+            client_data_batches = np.random.choice(cluster_data, size=(clients_per_cluster, samples_per_client), replace=False)
+            for client_id in range(clients_per_cluster):
+                indx_sample[cluster_id*clients_per_cluster+client_id] = list(client_data_batches[client_id])
+        
         return indx_sample
     else:
         raise ValueError("Dataset name not recognized.")
