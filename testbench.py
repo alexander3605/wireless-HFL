@@ -28,7 +28,7 @@ from pprint import pprint
 TEST_RESULTS_DIR = "log_files"
 CONFIG_DIR = "config_files"
 MAX_THREADS = 6
-N_EXPERIMENTS = 9
+N_EXPERIMENTS = 10
 # N_EXPERIMENTS = 1 # DEBUG
 
 def run_test(config_file, n_exp=N_EXPERIMENTS):
@@ -50,6 +50,7 @@ if __name__ == "__main__":
     n_clusters = [25]
     n_clients = [250]
     mobility_rate = [0.0, 0.1, 0.25, 0.5]
+    move_to_neighbours = [False]
     model_type = ["mnist"]
     dataset_name = ["mnist"]
     dataset_distribution = ["iid", "non_iid"]
@@ -103,6 +104,7 @@ if __name__ == "__main__":
     params["n_clusters"] = n_clusters
     params["n_clients"] = n_clients
     params["clients_mobility"] = clients_mobility
+    params["move_to_neighbours"] = move_to_neighbours
     params["mobility_rate"] = mobility_rate
     params["model_type"] = model_type
     params["dataset_name"] = dataset_name

@@ -104,11 +104,6 @@ class Network():
 
     def move_clients(self):
         if self.config["clients_mobility"] and self.config["n_clusters"]>1:
-            
-            # print("OLD DISTRIBUTION")
-            # pprint(np.array([len(cluster.clients) for cluster in self.clusters.flatten()]).reshape(self.clusters.shape))
-            
-
             moving_clients = [[] for _ in self.clusters.flatten()]
             destinations = [[] for _ in self.clusters.flatten()]
 
@@ -117,12 +112,24 @@ class Network():
             for i in range(proximities.shape[0]):
                 for j in range(proximities.shape[1]):
                     if i != j:
-                        proximities[i][j] = 1/np.linalg.norm(
-                            np.subtract(
-                                list(np.unravel_index(i, shape=self.clusters.shape)),
-                                list(np.unravel_index(j, shape=self.clusters.shape))
-                            ), ord=2)
-                    # Normalize distances so they sum up to 1 for each row
+                        # If move only to neighbouring clusters is allowed
+                        # set equal proximities only for neighbouring clusters 
+                        if self.config["move_to_neighbours"]:
+                            dist = np.abs(
+                                np.subtract(
+                                    list(np.unravel_index(i, shape=self.clusters.shape)),
+                                    list(np.unravel_index(j, shape=self.clusters.shape))
+                                ))
+                            proximities[i][j] = 1 if np.all([int(dist[k]<=1) for k in range(2)]) else 0
+
+                        # Otherwise use inverse of l2 distance
+                        else:
+                            proximities[i][j] = 1/np.linalg.norm(
+                                np.subtract(
+                                    list(np.unravel_index(i, shape=self.clusters.shape)),
+                                    list(np.unravel_index(j, shape=self.clusters.shape))
+                                ), ord=2)
+                # Normalize distances so they sum up to 1 for each row
                 proximities[i] /= np.sum(proximities[i])
 
             for i, cluster in enumerate(self.clusters.flatten()):

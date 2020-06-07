@@ -33,6 +33,9 @@ class Simulation():
         else:
             self.config["save_memory"] = False
 
+        if "move_to_neighbours" not in self.config.keys():
+            self.config["move_to_neighbours"] = False
+
         self.network = Network(self.config)
         self.round_count = None
         self.train_accuracy = []
