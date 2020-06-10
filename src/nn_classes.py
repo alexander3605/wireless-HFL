@@ -203,6 +203,17 @@ class ResNet(nn.Module):
         out = self.linear(out)
         return out
 
+class MobileNet_cifar10(nn.Module):
+    def __init__(self):
+        super(MobileNet_cifar10, self).__init__()
+        self.main_block = mobilenet_v2()
+        self.fc = nn.Linear(1000, 10)
+
+    def forward(self, x):
+        x = self.main_block(x)
+        x = self.fc(x)
+        return x
+
 def get_mnistnet():
     return MnistNet()
 
@@ -225,7 +236,7 @@ def get_inceptionNet():
     return inception_v3()
 
 def get_mobileNet():
-    return mobilenet_v2()
+    return MobileNet_cifar10()
 
 
 def get_net(config):
