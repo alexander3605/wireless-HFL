@@ -206,7 +206,7 @@ class ResNet(nn.Module):
 class MobileNet_cifar10(nn.Module):
     def __init__(self):
         super(MobileNet_cifar10, self).__init__()
-        self.main_block = mobilenet_v2()
+        self.main_block = mobilenet_v2(pretrained=True)
         self.fc = nn.Linear(1000, 10)
 
     def forward(self, x):

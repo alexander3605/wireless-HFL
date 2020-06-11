@@ -47,8 +47,7 @@ class Client():
 
     def learn_sgd(self, l_rate, local_iter):
         optimizer = torch.optim.SGD(self.model.parameters(), 
-                                    lr=l_rate, 
-                                    momentum=0.9)
+                                    lr=l_rate)
 
         criterion = nn.CrossEntropyLoss()
         device = self.config["device"]
