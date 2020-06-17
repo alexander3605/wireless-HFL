@@ -38,17 +38,11 @@ def rand_comp_time(config,n_clients):
     comp_times = comp_rates * n_samples * n_parameters * n_epochs 
     return comp_times
 
-# def rand_shift_exp(mu,alpha): # alpha is the min duration parameter /  mu is the comp speed parameter  
-#     cdf_rv = np.random.random_sample(1) # randomly choose a point from cdf 
-#     rv = (np.log(1 - cdf_rv) / (-mu) + alpha)
-#     return rv
-
-
 ######################################
 ############# RATE.PY ################
 ######################################
-power_bs = 10 ** (-15 / 10)
-power_usr = 10 ** (-20 / 10)
+power_bs = 6.3
+power_usr = 0.2
 noise_psd = 10 ** (-204/10)
 bandwidth = 20 * 1e6
 radius = 500
