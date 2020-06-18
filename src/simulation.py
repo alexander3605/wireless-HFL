@@ -54,8 +54,7 @@ class Simulation():
                 print(f"%%%% ROUND LATENCY:\t{round(self.latency[-1],4)}")
                 self.network.move_clients()
                 if self.round_count % self.config["server_global_rate"] == 0:
-                    # self.train_accuracy.append(self.network.evaluate_train())
-                    self.train_accuracy.append(0.0) ## DEBUG
+                    self.train_accuracy.append(self.network.evaluate_train())
                     print(f"%%%% TRAIN ACCURACY:\t{round(self.train_accuracy[-1],4)}")
                     self.test_accuracy.append(self.network.evaluate())
                     print(f"%%%% TEST ACCURACY:\t{self.test_accuracy[-1]}")
